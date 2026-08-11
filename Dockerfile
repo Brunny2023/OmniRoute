@@ -264,3 +264,17 @@ RUN --mount=type=cache,id=npm-cache,target=/root/.npm \
   npm install -g --no-audit --no-fund @openai/codex @anthropic-ai/claude-code droid openclaw@latest
 
 USER node
+
+# ── Runner Cloudflare (default image target) ──────────────────────────────────
+# Cloudflare builds the Dockerfile path declared in wrangler.jsonc without a
+# target selector. Keep the existing lean runtime as the final target so the
+# staging deployment does not include Docker, host mounts, or optional CLI tools.
+# Compose profiles keep selecting their named runner stages explicitly.
+FROM runner-base AS runner-cloudflare
+
+# Redis is not part of the Cloudflare deployment architecture. The application
+# receives OMNIROUTE_DISABLE_REDIS=1 from the Worker and has SQLite fallbacks;
+# remove the optional client so this image cannot open a Redis connection.
+USER root
+RUN rm -rf /app/node_modules/ioredis
+USER node

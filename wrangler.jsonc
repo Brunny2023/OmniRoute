@@ -1,0 +1,53 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "omniroute-staging",
+  "main": "src/cloudflare/index.ts",
+  "compatibility_date": "2026-08-11",
+  "workers_dev": true,
+  "preview_urls": true,
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1,
+  },
+  "containers": [
+    {
+      "class_name": "OmniRouteContainer",
+      "image": "./Dockerfile",
+      "max_instances": 1,
+      "instance_type": "standard-1",
+    },
+  ],
+  "durable_objects": {
+    "bindings": [
+      {
+        "name": "OMNIROUTE_CONTAINER",
+        "class_name": "OmniRouteContainer",
+      },
+      {
+        "name": "OMNIROUTE_EDGE_RATE_LIMITER",
+        "class_name": "EdgeRateLimiter",
+      },
+    ],
+  },
+  "migrations": [
+    {
+      "tag": "v1",
+      "new_sqlite_classes": ["OmniRouteContainer", "EdgeRateLimiter"],
+    },
+  ],
+  "vars": {
+    "OMNIROUTE_EDGE_RATE_LIMIT_MAX": "120",
+    "OMNIROUTE_EDGE_RATE_LIMIT_WINDOW_MS": "60000",
+    "OMNIROUTE_MAX_REQUEST_BYTES": "52428800",
+    "OMNIROUTE_CONTAINER_SLEEP_AFTER": "20m",
+  },
+  "secrets": {
+    "required": [
+      "JWT_SECRET",
+      "API_KEY_SECRET",
+      "INITIAL_PASSWORD",
+      "STORAGE_ENCRYPTION_KEY",
+      "OMNIROUTE_WS_BRIDGE_SECRET",
+    ],
+  },
+}

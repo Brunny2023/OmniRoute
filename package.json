@@ -83,6 +83,10 @@
   "homepage": "https://omniroute.online",
   "scripts": {
     "dev": "node --max-old-space-size=8192 scripts/dev/run-next.mjs dev",
+    "cf:types": "wrangler types --config wrangler.jsonc",
+    "cf:validate": "wrangler deploy --config wrangler.jsonc --dry-run",
+    "cf:deploy:staging": "wrangler deploy --config wrangler.jsonc",
+    "cf:tail:staging": "wrangler tail omniroute-staging",
     "prebuild:docs": "node scripts/docs/gen-openapi-module.mjs",
     "gen:provider-reference": "bun scripts/docs/gen-provider-reference.ts",
     "bench:compression": "bun scripts/compression/benchmark.ts",
@@ -260,6 +264,7 @@
     "@dnd-kit/core": "^6.3.1",
     "@dnd-kit/sortable": "^10.0.0",
     "@dnd-kit/utilities": "^3.2.2",
+    "@huggingface/transformers": "^4.2.0",
     "@lobehub/icons": "^5.8.0",
     "@modelcontextprotocol/sdk": "^1.29.0",
     "@monaco-editor/react": "^4.7.0",
@@ -302,6 +307,7 @@
     "next-themes": "^0.4.6",
     "node-machine-id": "^1.1.12",
     "omniglyph": "^1.0.2",
+    "onnxruntime-node": "~1.24.3",
     "open": "^11.0.0",
     "ora": "^9.4.1",
     "parse5": "^8.0.1",
@@ -332,9 +338,7 @@
     "xxhash-wasm": "^1.1.0",
     "yazl": "^3.3.1",
     "zod": "^4.4.3",
-    "zustand": "^5.0.13",
-    "@huggingface/transformers": "^4.2.0",
-    "onnxruntime-node": "~1.24.3"
+    "zustand": "^5.0.13"
   },
   "optionalDependencies": {
     "@atjsh/llmlingua-2": "2.0.3",
@@ -342,12 +346,14 @@
     "better-sqlite3": "^13.0.2",
     "js-tiktoken": "^1.0.20",
     "keytar": "^7.9.0",
+    "sqlite-vec": "^0.1.9",
     "tls-client-node": "^0.2.0",
-    "wreq-js": "^2.3.1",
-    "sqlite-vec": "^0.1.9"
+    "wreq-js": "^2.3.1"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.11.3",
+    "@cloudflare/containers": "^0.3.7",
+    "@cloudflare/workers-types": "^5.20260811.1",
     "@cyclonedx/cyclonedx-npm": "6.0.0",
     "@playwright/test": "^1.60.0",
     "@size-limit/file": "^12.1.0",
@@ -397,6 +403,7 @@
     "typescript-eslint": "^8.59.4",
     "vitest": "^4.1.7",
     "wait-on": "^9.0.10",
+    "wrangler": "^4.121.0",
     "wtfnode": "^0.10.1"
   },
   "lint-staged": {

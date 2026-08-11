@@ -42,12 +42,14 @@ async function resetStorage() {
 
 const origDriver = process.env.QUOTA_STORE_DRIVER;
 const origRedisUrl = process.env.QUOTA_STORE_REDIS_URL;
+const origDisableRedis = process.env.OMNIROUTE_DISABLE_REDIS;
 
 test.beforeEach(async () => {
   await resetStorage();
   // Reset env
   delete process.env.QUOTA_STORE_DRIVER;
   delete process.env.QUOTA_STORE_REDIS_URL;
+  delete process.env.OMNIROUTE_DISABLE_REDIS;
   // Reset singleton
   const { resetQuotaStoreSingleton } = await import("../../src/lib/quota/storeFactory.ts");
   resetQuotaStoreSingleton();
@@ -63,6 +65,8 @@ test.after(async () => {
   else delete process.env.QUOTA_STORE_DRIVER;
   if (origRedisUrl !== undefined) process.env.QUOTA_STORE_REDIS_URL = origRedisUrl;
   else delete process.env.QUOTA_STORE_REDIS_URL;
+  if (origDisableRedis !== undefined) process.env.OMNIROUTE_DISABLE_REDIS = origDisableRedis;
+  else delete process.env.OMNIROUTE_DISABLE_REDIS;
 });
 
 // ─── Default driver ──────────────────────────────────────────────────────────
@@ -117,6 +121,18 @@ test("storeFactory: QUOTA_STORE_DRIVER=redis without URL → fallback to sqlite"
   const store = await getQuotaStore();
   assert.ok(store, "Should return a valid store (sqlite fallback)");
   assert.ok(typeof store.consume === "function");
+});
+
+test("storeFactory: OMNIROUTE_DISABLE_REDIS forces SQLite despite a Redis configuration", async () => {
+  const { getQuotaStore, resetQuotaStoreSingleton } = await import("../../src/lib/quota/storeFactory.ts");
+  resetQuotaStoreSingleton();
+
+  process.env.QUOTA_STORE_DRIVER = "redis";
+  process.env.QUOTA_STORE_REDIS_URL = "redis://should-not-be-contacted:6379";
+  process.env.OMNIROUTE_DISABLE_REDIS = "1";
+
+  const store = await getQuotaStore();
+  assert.equal(store.constructor.name, "SqliteQuotaStore");
 });
 
 // ─── Unknown driver → fallback sqlite ────────────────────────────────────────
