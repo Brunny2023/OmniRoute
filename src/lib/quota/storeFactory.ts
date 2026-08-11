@@ -10,6 +10,9 @@
  *   1. DB setting `quotaStore.redisUrl`
  *   2. Env `QUOTA_STORE_REDIS_URL`
  *
+ * `OMNIROUTE_DISABLE_REDIS=1` is a deployment safety switch for targets such as
+ * Cloudflare Containers. It forces the SQLite store even if a historic setting
+ * requests Redis, so the gateway never opens an external Redis connection.
  * If driver=redis but URL is absent/invalid → fallback to sqlite + pino.warn.
  * Never throws — always returns a valid QuotaStore.
  *
@@ -77,13 +80,14 @@ export async function getQuotaStore(): Promise<QuotaStore> {
   // Read settings
   const dbSettings = await readDbSettings();
 
-  const driver =
-    dbSettings.driver ?? process.env.QUOTA_STORE_DRIVER ?? "sqlite";
+  const driver = dbSettings.driver ?? process.env.QUOTA_STORE_DRIVER ?? "sqlite";
 
-  const redisUrl =
-    dbSettings.redisUrl ?? process.env.QUOTA_STORE_REDIS_URL ?? "";
+  const redisUrl = dbSettings.redisUrl ?? process.env.QUOTA_STORE_REDIS_URL ?? "";
 
-  if (driver === "redis") {
+  const redisDisabled = process.env.OMNIROUTE_DISABLE_REDIS === "1";
+  if (driver === "redis" && redisDisabled) {
+    log.warn("Redis QuotaStore is disabled for this deployment — using SQLite");
+  } else if (driver === "redis") {
     if (!redisUrl) {
       log.warn("QUOTA_STORE_DRIVER=redis but no Redis URL configured — falling back to sqlite");
     } else {
@@ -93,7 +97,10 @@ export async function getQuotaStore(): Promise<QuotaStore> {
         // The actual connection is lazy; we just need the class to instantiate.
         const store = getRedisQuotaStore(redisUrl);
         _store = store;
-        log.info({ redisUrl: redisUrl.replace(/:[^:@]*@/, ":***@") }, "QuotaStore: using Redis driver");
+        log.info(
+          { redisUrl: redisUrl.replace(/:[^:@]*@/, ":***@") },
+          "QuotaStore: using Redis driver"
+        );
         return _store;
       } catch (err) {
         log.warn(

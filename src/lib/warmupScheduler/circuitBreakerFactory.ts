@@ -60,7 +60,8 @@ class RedisCircuitBreakerStoreWithFailureReset implements CircuitBreakerStore {
 
 /**
  * Returns the circuit-breaker store. Prefers Redis when REDIS_URL is set,
- * falls back to SQLite. If Redis was connected once but later fails at
+ * except when OMNIROUTE_DISABLE_REDIS=1 forces the SQLite implementation for
+ * an environment that must not establish Redis connections. If Redis was connected once but later fails at
  * runtime, clears the cached instance so the next call re-probes Redis
  * (or falls back to SQLite if Redis is still down).
  *
@@ -85,7 +86,8 @@ export function getCircuitBreakerStore(): Promise<CircuitBreakerStore> {
 
 async function buildStore(): Promise<CircuitBreakerStore> {
   const redisUrl = process.env.REDIS_URL;
-  if (redisUrl) {
+  const redisDisabled = process.env.OMNIROUTE_DISABLE_REDIS === "1";
+  if (redisUrl && !redisDisabled) {
     try {
       const mod = await import("ioredis");
       const RedisCtor = (mod.default ?? mod) as RedisCtor;
