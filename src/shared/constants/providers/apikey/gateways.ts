@@ -1179,6 +1179,7 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     authHint: "Get your Regolo API key from regolo.ai, then paste it here as a Bearer token.",
     apiHint:
       "OpenAI-compatible endpoint at https://api.regolo.ai/v1 with dynamic model discovery (19 models).",
+  },
   "naga-ac": {
     id: "naga-ac",
     alias: "naga",

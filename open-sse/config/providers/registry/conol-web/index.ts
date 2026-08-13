@@ -1,5 +1,5 @@
 import type { RegistryEntry } from "../../shared.ts";
-import { CONOL_FALLBACK_MODELS } from "../../../services/conolModels.ts";
+import { CONOL_FALLBACK_MODELS } from "../../../../services/conolModels.ts";
 
 export const conol_webProvider: RegistryEntry = {
   id: "conol-web",
