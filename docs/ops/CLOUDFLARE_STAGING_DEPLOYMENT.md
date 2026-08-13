@@ -1,3 +1,7 @@
+---
+title: "Cloudflare Staging Deployment"
+---
+
 # Cloudflare Staging Deployment Guide
 
 This guide deploys the **staging-only** Cloudflare Worker and Container implementation. It does not attach a production custom domain or represent a production-readiness approval.
