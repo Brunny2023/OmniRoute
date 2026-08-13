@@ -41,8 +41,41 @@ jobs:
       - name: Validate Worker configuration
         run: npx wrangler deploy --config wrangler.jsonc --dry-run
 
+      - name: Create temporary staging Worker secrets file
+        shell: bash
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          API_KEY_SECRET: ${{ secrets.API_KEY_SECRET }}
+          INITIAL_PASSWORD: ${{ secrets.INITIAL_PASSWORD }}
+          STORAGE_ENCRYPTION_KEY: ${{ secrets.STORAGE_ENCRYPTION_KEY }}
+          OMNIROUTE_WS_BRIDGE_SECRET: ${{ secrets.OMNIROUTE_WS_BRIDGE_SECRET }}
+        run: |
+          set -euo pipefail
+          for secret_name in JWT_SECRET API_KEY_SECRET INITIAL_PASSWORD STORAGE_ENCRYPTION_KEY OMNIROUTE_WS_BRIDGE_SECRET; do
+            if [[ -z "${!secret_name:-}" ]]; then
+              echo "::error::Required staging deployment secret ${secret_name} is unavailable."
+              exit 1
+            fi
+          done
+
+          secrets_file="${RUNNER_TEMP}/omniroute-staging-worker-secrets.env"
+          umask 077
+          : > "${secrets_file}"
+          printf 'JWT_SECRET=%s\n' "${JWT_SECRET}" >> "${secrets_file}"
+          printf 'API_KEY_SECRET=%s\n' "${API_KEY_SECRET}" >> "${secrets_file}"
+          printf 'INITIAL_PASSWORD=%s\n' "${INITIAL_PASSWORD}" >> "${secrets_file}"
+          printf 'STORAGE_ENCRYPTION_KEY=%s\n' "${STORAGE_ENCRYPTION_KEY}" >> "${secrets_file}"
+          printf 'OMNIROUTE_WS_BRIDGE_SECRET=%s\n' "${OMNIROUTE_WS_BRIDGE_SECRET}" >> "${secrets_file}"
+          chmod 600 "${secrets_file}"
+          printf 'OMNIROUTE_WORKER_SECRETS_FILE=%s\n' "${secrets_file}" >> "${GITHUB_ENV}"
+
       - name: Deploy Worker and Container
-        run: npx wrangler deploy --config wrangler.jsonc
+        run: npx wrangler deploy --config wrangler.jsonc --secrets-file "${OMNIROUTE_WORKER_SECRETS_FILE}"
 
       - name: Report Container deployment status
         run: npx wrangler containers list
+
+      - name: Remove temporary staging Worker secrets file
+        if: ${{ always() }}
+        shell: bash
+        run: rm -f "${RUNNER_TEMP}/omniroute-staging-worker-secrets.env"
