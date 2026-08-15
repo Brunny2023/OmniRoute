@@ -32,6 +32,69 @@ jobs:
           node-version: "24"
           cache: npm
 
+      - name: Cloudflare authorization preflight
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [[ -z "${CLOUDFLARE_API_TOKEN:-}" || -z "${CLOUDFLARE_ACCOUNT_ID:-}" ]]; then
+            echo "::error::Cloudflare preflight requires both configured Cloudflare credentials."
+            exit 1
+          fi
+
+          preflight_dir="${RUNNER_TEMP}/cloudflare-auth-preflight"
+          umask 077
+          mkdir -p "${preflight_dir}"
+          chmod 700 "${preflight_dir}"
+          curl_config="${preflight_dir}/curl.conf"
+          trap 'rm -rf -- "${preflight_dir}"' EXIT
+          printf 'header = "Authorization: Bearer %s"\n' "${CLOUDFLARE_API_TOKEN}" > "${curl_config}"
+          printf 'header = "Accept: application/json"\n' >> "${curl_config}"
+          chmod 600 "${curl_config}"
+
+          cloudflare_get() {
+            local endpoint="$1"
+            local response_file="$2"
+            local http_status
+            if ! http_status="$(curl --config "${curl_config}" --silent --show-error --output "${response_file}" --write-out '%{http_code}' "https://api.cloudflare.com/client/v4${endpoint}")"; then
+              echo "::error::Cloudflare preflight transport failure for ${endpoint}."
+              exit 1
+            fi
+            if [[ "${http_status}" != 2* ]]; then
+              echo "::error::Cloudflare preflight request failed for ${endpoint} with HTTP ${http_status}."
+              exit 1
+            fi
+          }
+
+          token_response="${preflight_dir}/token-verify.json"
+          cloudflare_get "/user/tokens/verify" "${token_response}"
+          token_status="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(typeof value?.result?.status === "string" ? value.result.status : "unknown");' "${token_response}")"
+          if [[ "${token_status}" != "active" ]]; then
+            echo "::error::Cloudflare API token verification did not report an active token."
+            exit 1
+          fi
+
+          account_response="${preflight_dir}/account-workers.json"
+          cloudflare_get "/accounts/${CLOUDFLARE_ACCOUNT_ID}/workers/scripts?per_page=1" "${account_response}"
+          account_success="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(value?.success === true ? "true" : "false");' "${account_response}")"
+          if [[ "${account_success}" != "true" ]]; then
+            echo "::error::Configured Cloudflare account could not be read with the supplied credentials."
+            exit 1
+          fi
+
+          containers_response="${preflight_dir}/containers-applications.json"
+          cloudflare_get "/accounts/${CLOUDFLARE_ACCOUNT_ID}/containers/applications?per_page=1" "${containers_response}"
+          containers_success="$(node -e 'const fs=require("fs"); const value=JSON.parse(fs.readFileSync(process.argv[1], "utf8")); process.stdout.write(value?.success === true ? "true" : "false");' "${containers_response}")"
+          if [[ "${containers_success}" != "true" ]]; then
+            echo "::error::Cloudflare Workers Containers read preflight failed for the configured account."
+            exit 1
+          fi
+
+          echo "Cloudflare token verification: PASS (active)."
+          echo "Cloudflare configured-account access: PASS."
+          echo "Workers Scripts read preflight: PASS; no write operation was attempted."
+          echo "Workers Containers read preflight: PASS; no write operation was attempted."
+          echo "Durable Object migration permission: not mutation-tested; deployment remains separately authorized."
+
       - name: Set up Docker Buildx
         uses: docker/setup-buildx-action@v4
 
