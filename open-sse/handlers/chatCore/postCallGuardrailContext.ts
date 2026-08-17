@@ -9,8 +9,9 @@
  * `stream: false` constants and the headers/endpoint null-coalescing.
  */
 import { resolveDisabledGuardrails as defaultResolveDisabled } from "@/lib/guardrails";
+import type { GuardrailContext } from "@/lib/guardrails/base";
 
-type LoggerLike = unknown;
+type LoggerLike = GuardrailContext["log"];
 type HeadersLike = Headers | Record<string, unknown> | null;
 
 export function buildPostCallGuardrailContext(
@@ -28,20 +29,22 @@ export function buildPostCallGuardrailContext(
 ) {
   const headers = (args.clientRawRequest?.headers as HeadersLike) ?? null;
   return {
-    apiKeyInfo: args.apiKeyInfo,
+    apiKeyInfo: (args.apiKeyInfo as Record<string, unknown> | null) ?? null,
     disabledGuardrails: resolveDisabledGuardrails({
       apiKeyInfo: (args.apiKeyInfo as Record<string, unknown> | null) ?? null,
       body: args.body,
       headers,
     }),
-    endpoint: args.clientRawRequest?.endpoint || null,
+    endpoint:
+      typeof args.clientRawRequest?.endpoint === "string" ? args.clientRawRequest.endpoint : null,
     headers,
-    log: args.log,
+    log: args.log ?? null,
     method: "POST",
-    model: args.model,
-    provider: args.provider,
-    sourceFormat: args.responsePayloadFormat,
+    model: args.model ?? null,
+    provider: args.provider ?? null,
+    sourceFormat:
+      typeof args.responsePayloadFormat === "string" ? args.responsePayloadFormat : null,
     stream: false,
-    targetFormat: args.clientResponseFormat,
-  } as const;
+    targetFormat: typeof args.clientResponseFormat === "string" ? args.clientResponseFormat : null,
+  } satisfies GuardrailContext;
 }

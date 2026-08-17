@@ -264,6 +264,8 @@ describe("driverFactory", () => {
         second.close();
         first.close();
       }
+    });
+
     // Cursor renewal plan, Task 2 Step 5: tryIdeAuth() now passes a
     // busy-timeout to tryOpenSync() on every driver path, since it's invoked
     // from an unattended sweep tick (not just the human-attended auto-import

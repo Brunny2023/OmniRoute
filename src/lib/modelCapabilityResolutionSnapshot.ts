@@ -48,7 +48,7 @@ export function createModelCapabilityResolutionSnapshot(): ModelCapabilityResolu
 
   const maxTokenOverrides = new Map<string, Map<string, number>>();
   for (const entry of listModelCapabilityOverrides()) {
-    if (entry.key !== "max_token") continue;
+    if (entry.key !== "max_output_tokens") continue;
     setNestedOverride(maxTokenOverrides, entry.provider, entry.modelId, entry.value);
   }
 

@@ -525,7 +525,7 @@ async function uploadConolImages(
         },
         sessionId
       ),
-      body: image.data,
+      body: image.data as unknown as BodyInit,
       signal: signal ?? undefined,
     });
     if (!response.ok) {
@@ -683,8 +683,7 @@ export class ConolWebExecutor extends BaseExecutor {
         const timezone = safeTimezone(requestBody.timezone);
         // Sticky: once a session has carried an image, Conol keeps treating it as
         // multimodal, which drives preset text/multimodal model resolution.
-        const hasImageHistory =
-          (cachedBinding?.hasImageHistory ?? false) || imageParts.length > 0;
+        const hasImageHistory = (cachedBinding?.hasImageHistory ?? false) || imageParts.length > 0;
 
         // Conol ignores agentModel/agentEffort on session creation, so create the
         // session empty and configure it before any turn is submitted. Otherwise the

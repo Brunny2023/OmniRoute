@@ -1,5 +1,6 @@
 import { randomUUID } from "crypto";
 import { resolveChatRequestBody } from "./requestBody";
+import { isProviderBreakerFailureStatus } from "./chatPredicates";
 import * as chatAdmission from "./chatAdmission.ts";
 import { buildClientRawRequest, resolveDispatchClientRawRequest } from "./chat/clientRawRequest.ts";
 export { buildClientRawRequest, resolveDispatchClientRawRequest };
@@ -792,7 +793,7 @@ async function handleChatImplementation(
       // OAuth selection must happen atomically with occupancy reservation in the
       // actual dispatch. Availability preflight may finish well before a combo
       // target runs, so caching OAuth credentials here would reintroduce a race.
-      if (creds.authType !== "oauth") {
+      if (!("authType" in creds) || creds.authType !== "oauth") {
         comboPreselectedCredentials.set(getComboCredentialCacheKey(modelString, target), creds);
       }
       return true;

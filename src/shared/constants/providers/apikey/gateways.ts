@@ -349,21 +349,6 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     apiHint:
       "Create a ZeroLimitAI Bearer token, then use https://www.zerolimitai.com/api/v1 as the OpenAI-compatible base URL.",
   },
-  chatanywhere: {
-    id: "chatanywhere",
-    alias: "chatanywhere",
-    name: "ChatAnywhere",
-    icon: "router",
-    color: "#2563EB",
-    textIcon: "CA",
-    passthroughModels: true,
-    website: "https://chatanywhere.tech",
-    hasFree: true,
-    freeNote:
-      "Personal, educational or research use only: public documentation cites 10,000 points/day and 200 requests/day per IP/key; do not use for commercial traffic.",
-    apiHint:
-      "Create a ChatAnywhere key linked to GitHub, then use https://api.chatanywhere.org/v1 outside China. Review the non-commercial terms before enabling it.",
-  },
   helyxai: {
     id: "helyxai",
     alias: "helyxai",
@@ -578,7 +563,8 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     textIcon: "DA",
     website: "https://inference.dahl.global",
     hasFree: true,
-    freeNote: "Free — MiniMax M2.7, Kimi K2.6. Click 'Add Account' to auto-generate a token, or add your own API key.",
+    freeNote:
+      "Free — MiniMax M2.7, Kimi K2.6. Click 'Add Account' to auto-generate a token, or add your own API key.",
     authHint: "Click 'Add Account' to auto-generate a token, or add a manual API key.",
     apiHint: "Auto-generate a token or paste your own API key.",
     apiKeyUrl: "https://inference.dahl.global/tokens",
@@ -1193,8 +1179,7 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     freeNote:
       "Free models include Nemotron 3 Ultra (free) and Llama 3.3 70B Instruct (Free). Paid models require credits. Google/GitHub/Discord signup.",
     passthroughModels: true,
-    authHint:
-      "Get API key at naga.ac — Google/GitHub/Discord signup available.",
+    authHint: "Get API key at naga.ac — Google/GitHub/Discord signup available.",
   },
   chatanywhere: {
     id: "chatanywhere",
@@ -1208,7 +1193,6 @@ export const APIKEY_PROVIDERS_GATEWAYS = {
     freeNote:
       "Free tier: 5 req/day for GPT-5/4o/4.1, 30/day DeepSeek, 200/day gpt-4o-mini. Personal non-commercial use only — see chatanywhere/GPT_API_free. Requires GitHub-account-gated API key.",
     passthroughModels: true,
-    authHint:
-      "Get free API key at api.chatanywhere.tech — requires GitHub account signup.",
+    authHint: "Get free API key at api.chatanywhere.tech — requires GitHub account signup.",
   },
 };

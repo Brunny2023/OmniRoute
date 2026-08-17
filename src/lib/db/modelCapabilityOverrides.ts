@@ -69,16 +69,18 @@ export type NestedMaxTokenOverrideMap = ReadonlyMap<string, ReadonlyMap<string, 
 export function getModelCapabilityOverride(
   provider: string | null | undefined,
   modelId: string | null | undefined,
-  key: ModelCapabilityOverrideKey,
+  key: ModelCapabilityOverrideKey | "max_token",
   bulkMaxTokenOverrides?: NestedMaxTokenOverrideMap | null
 ): number | null {
   const target = parseModelOverrideTarget(`${provider || ""}/${modelId || ""}`);
-  if (!target || !isSupportedKey(key)) return null;
+  if (!target) return null;
 
   if (bulkMaxTokenOverrides) {
     if (key !== "max_token") return null;
     return bulkMaxTokenOverrides.get(target.provider)?.get(target.modelId) ?? null;
   }
+
+  if (!isSupportedKey(key)) return null;
 
   try {
     const row = getDbInstance()

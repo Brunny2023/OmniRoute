@@ -17,12 +17,21 @@
 // after/afterEach.
 export type DomMockRestore = () => void;
 
+type DomConstructor = { prototype: object };
+type DomMockGlobals = Record<string, unknown> & {
+  window?: object;
+  Window?: DomConstructor;
+  HTMLCanvasElement?: DomConstructor;
+  CanvasRenderingContext2D?: DomConstructor;
+  document?: { createElement: (tag: string) => unknown };
+};
+
 export function setupDomMocks(): DomMockRestore {
   if (typeof global === 'undefined') return () => {};
   // Single typed handle to `global` so the rest of this function reads/writes
   // window/document/HTMLCanvasElement/CanvasRenderingContext2D — none of which
   // exist on Node's `global` type — through one cast instead of one per site.
-  const g = global as Record<string, any>;
+  const g = global as unknown as DomMockGlobals;
   const hadWindow = 'window' in g;
   const hadWindowCtor = 'Window' in g;
   const hadCanvasElement = 'HTMLCanvasElement' in g;
@@ -358,7 +367,7 @@ function decodeText(ptr, len) {
 
 const cachedTextEncoder = new TextEncoder();
 
-if (!('encodeInto' in cachedTextEncoder)) {
+if (typeof cachedTextEncoder.encodeInto !== "function") {
     cachedTextEncoder.encodeInto = function (arg, view) {
         const buf = cachedTextEncoder.encode(arg);
         view.set(buf);

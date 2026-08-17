@@ -217,12 +217,17 @@ export async function executeWebSearch(
         400
       );
     }
-
+    if (!providerConfig) {
+      throw new WebSearchExecutionError(
+        "No usable search provider configuration was selected.",
+        500
+      );
+    }
     const otherIds = Object.values(SEARCH_PROVIDERS)
       .filter((provider) => supportsSearchType(provider, searchType))
       .sort((a, b) => a.costPerQuery - b.costPerQuery)
       .map((provider) => provider.id)
-      .filter((providerId) => providerId !== providerConfig.id);
+      .filter((providerId) => providerId !== providerConfig!.id);
 
     for (const providerId of otherIds) {
       const creds = await resolveSearchCredentials(providerId);
@@ -234,10 +239,14 @@ export async function executeWebSearch(
     }
   }
 
-  const clampedMaxResults = normalizeMaxResults(input, providerConfig);
+  if (!providerConfig) {
+    throw new WebSearchExecutionError("No usable search provider configuration was selected.", 500);
+  }
+  const selectedProviderConfig = providerConfig;
+  const clampedMaxResults = normalizeMaxResults(input, selectedProviderConfig);
   const cacheKey = computeCacheKey(
     input.query.trim(),
-    providerConfig.id,
+    selectedProviderConfig.id,
     searchType,
     clampedMaxResults,
     input.country,
@@ -248,7 +257,7 @@ export async function executeWebSearch(
       time_range: input.time_range,
     }
   );
-  const ttl = providerConfig.cacheTTLMs ?? SEARCH_CACHE_DEFAULT_TTL_MS;
+  const ttl = selectedProviderConfig.cacheTTLMs ?? SEARCH_CACHE_DEFAULT_TTL_MS;
 
   const { data, cached } = await getOrCoalesce(cacheKey, ttl, async () => {
     const result = await handleSearch({

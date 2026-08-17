@@ -665,8 +665,6 @@ export function extractUsage(chunk) {
         chunk.usage.reasoning_tokens,
       // xAI's exact provider-reported cost (port of decolua/9router#2453, capability A).
       cost_in_usd_ticks: chunk.usage.cost_in_usd_ticks,
-      cache_read_input_tokens: chunk.usage.cache_read_input_tokens,
-      cache_creation_input_tokens: chunk.usage.cache_creation_input_tokens,
     });
   }
 

@@ -24,20 +24,28 @@ async function getPublicIp(): Promise<string> {
   }
 }
 
-async function fetchChallenge(uuid: string): Promise<any> {
+interface TinyCmsChallenge {
+  challenge: string;
+  challengeId: string;
+  expiresAt: number | string;
+  version: string;
+  difficulty: number;
+}
+
+async function fetchChallenge(uuid: string): Promise<TinyCmsChallenge> {
   const res = await fetch(CHALLENGE_URL, {
     method: "GET",
     headers: {
-      "uuid": uuid,
+      uuid: uuid,
       "x-origin": "https://gov.freegpt.win",
-      "Accept": "application/json",
+      Accept: "application/json",
       "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
     },
   });
   if (!res.ok) {
     throw new Error(`Failed to fetch challenge: ${res.status}`);
   }
-  return await res.json();
+  return (await res.json()) as TinyCmsChallenge;
 }
 
 export class TinyCmsExecutor extends BaseExecutor {
@@ -47,7 +55,7 @@ export class TinyCmsExecutor extends BaseExecutor {
 
   async execute(input: ExecuteInput) {
     const { body, credentials, signal } = input;
-    const bodyObj = (body || {}) as Record<string, any>;
+    const bodyObj = (body || {}) as Record<string, unknown>;
 
     // TinyCMS uses 'uuid' header for identification
     const uuid = String(credentials?.apiKey ?? "").trim();
@@ -102,7 +110,7 @@ export class TinyCmsExecutor extends BaseExecutor {
         // Use configurable userid from providerSpecificData if present, otherwise generate one
         // from the UUID (the server uses it for request attribution, not auth).
         userid: String(credentials?.providerSpecificData?.userid ?? "") || uuid.slice(0, 20),
-        Accept: bodyObj.stream ? "text/event-stream" : "application/json",
+        Accept: bodyObj.stream === true ? "text/event-stream" : "application/json",
         "Content-Type": "application/json",
         "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36",
       };
@@ -116,14 +124,13 @@ export class TinyCmsExecutor extends BaseExecutor {
 
       const response = await fetch(CHAT_URL, fetchOptions);
       return {
-        status: response.status,
-        headers: Object.fromEntries(response.headers.entries()),
-        body: response.body,
+        response,
+        url: CHAT_URL,
       };
-    } catch (err: any) {
+    } catch (err: unknown) {
       return makeErrorResult(
         500,
-        `TinyCMS Error: ${err.message}`,
+        `TinyCMS Error: ${err instanceof Error ? err.message : String(err)}`,
         body,
         CHAT_URL
       );

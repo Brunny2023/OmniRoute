@@ -296,6 +296,8 @@ function buildSerperRequest(
   config: SearchProviderConfig,
   params: SearchRequestParams
 ): { url: string; init: RequestInit } {
+  const apiKey = params.token;
+  if (!apiKey) throw new Error("Serper Search requires an API key");
   const endpoint = params.searchType === "news" ? "/news" : "/search";
   const body: Record<string, unknown> = { q: params.query, num: params.maxResults };
   if (params.country) body.gl = params.country.toLowerCase();
@@ -304,7 +306,7 @@ function buildSerperRequest(
     url: `${config.baseUrl}${endpoint}`,
     init: {
       method: "POST",
-      headers: { "Content-Type": "application/json", "X-API-Key": params.token },
+      headers: { "Content-Type": "application/json", "X-API-Key": apiKey },
       body: JSON.stringify(body),
     },
   };
@@ -314,6 +316,8 @@ function buildBraveRequest(
   config: SearchProviderConfig,
   params: SearchRequestParams
 ): { url: string; init: RequestInit } {
+  const apiKey = params.token;
+  if (!apiKey) throw new Error("Brave Search requires an API key");
   const endpoint = params.searchType === "news" ? "/news/search" : "/web/search";
   const qp = new URLSearchParams({ q: params.query, count: String(params.maxResults) });
   if (params.country) qp.set("country", params.country);
@@ -322,7 +326,7 @@ function buildBraveRequest(
     url: `${config.baseUrl}${endpoint}?${qp}`,
     init: {
       method: "GET",
-      headers: { Accept: "application/json", "X-Subscription-Token": params.token },
+      headers: { Accept: "application/json", "X-Subscription-Token": apiKey },
     },
   };
 }
@@ -331,6 +335,8 @@ function buildExaRequest(
   config: SearchProviderConfig,
   params: SearchRequestParams
 ): { url: string; init: RequestInit } {
+  const apiKey = params.token;
+  if (!apiKey) throw new Error("Exa Search requires an API key");
   const { includes, excludes } = parseDomainFilter(params.domainFilter);
   const body: Record<string, unknown> = {
     query: params.query,
@@ -348,7 +354,7 @@ function buildExaRequest(
     url: config.baseUrl,
     init: {
       method: "POST",
-      headers: { "Content-Type": "application/json", "x-api-key": params.token },
+      headers: { "Content-Type": "application/json", "x-api-key": apiKey },
       body: JSON.stringify(body),
     },
   };

@@ -1,4 +1,4 @@
-feat(images): execute full combo strategy + fallback in /v1/images/generations (#9239)
+- feat(images): execute full combo strategy + fallback in /v1/images/generations (#9239)
 
 Add open-sse/services/imageCombo.ts that expands combo targets, filters
 to images-capable, executes priority strategy with handleImageGeneration
